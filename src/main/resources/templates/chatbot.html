@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ByteWizard Chatbot</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #121212;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .chat-container {
+            width: 100%;
+            max-width: 600px;
+            background: #212121;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .chat-header {
+            background-color: #1a1a1a;
+            color: white;
+            padding: 10px;
+            text-align: center;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .chat-header img {
+            height: 30px;
+            margin-right: 10px;
+        }
+        .chat-area {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            max-height: 400px;
+            background: #121212;
+        }
+        .message {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+            max-width: 80%;
+            word-wrap: break-word;
+            opacity: 0;
+            transition: opacity 0.5s ease-in;
+        }
+        .user-message {
+            background-color: #3c3c3c;
+            color: white;
+            align-self: flex-end;
+            margin-left: auto;
+        }
+        .bot-message {
+            background-color: #2c2c2c;
+            color: white;
+            align-self: flex-start;
+        }
+        .final-query {
+            background-color: #1a3a1a;
+            color: white;
+            font-family: monospace;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+        .input-area {
+            display: flex;
+            padding: 10px;
+            background: #1a1a1a;
+            border-top: 1px solid #3c3c3c;
+        }
+        #user-input {
+            flex: 1;
+            padding: 10px;
+            background: #2c2c2c;
+            color: white;
+            border: 1px solid #3c3c3c;
+            border-radius: 5px;
+            outline: none;
+        }
+        #send-btn {
+            padding: 10px 20px;
+            margin-left: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        #send-btn:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+<div class="chat-container">
+    <div class="chat-header">
+        <!-- Optional: Add your logo here -->
+        <!-- <img src="logo.png" alt="ByteWizard Logo"> -->
+        <span>ByteWizard Chatbot</span>
+    </div>
+    <div class="chat-area" id="chat-area"></div>
+    <div class="input-area">
+        <input type="text" id="user-input" placeholder="Type your query here...">
+        <button id="send-btn" onclick="sendQuery()">Send</button>
+    </div>
+</div>
+
+<script>
+    function appendMessage(sender, content, isFinal = false) {
+        const chatArea = document.getElementById('chat-area');
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${sender}-message`;
+        if (isFinal) messageDiv.classList.add('final-query');
+        messageDiv.textContent = content;
+        chatArea.appendChild(messageDiv);
+        // Trigger fade-in animation
+        setTimeout(() => {
+            messageDiv.style.opacity = '1';
+        }, 10);
+        chatArea.scrollTop = chatArea.scrollHeight; // Scroll to bottom
+    }
+
+    function sendQuery() {
+        const input = document.getElementById('user-input');
+        const query = input.value.trim();
+        if (!query) return;
+
+        // Show user message
+        appendMessage('user', query);
+
+        // Show processing message
+        appendMessage('bot', 'Processing your request...');
+
+        // Simulate backend request (replace with actual endpoint)
+        fetch('/query', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ nql: query })
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Remove processing message
+            const chatArea = document.getElementById('chat-area');
+            chatArea.removeChild(chatArea.lastChild);
+
+            // Show bot response and final query
+            appendMessage('bot', data.thoughts);
+            appendMessage('bot', `Final Query: ${data.final_query}`, true);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            appendMessage('bot', 'Error: Could not process your request.');
+        });
+
+        // Clear input
+        input.value = '';
+    }
+
+    // Enable Enter key to send query
+    document.getElementById('user-input').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') sendQuery();
+    });
+</script>
+</body>
+</html>
